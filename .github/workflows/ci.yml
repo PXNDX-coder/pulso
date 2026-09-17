@@ -46,6 +46,7 @@ jobs:
           fi
 
           echo "✅ Verificación de CHANGELOG superada"
+
   build-and-test:
     needs: validar-pr
     runs-on: ${{ matrix.os }}
@@ -58,9 +59,28 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Generar version.hpp si no existe
+      - name: Generar version.hpp si no existe (Unix)
+        if: runner.os != 'Windows'
         run: |
-          python3 -c "import os; os.makedirs('src/core', exist_ok=True); f=open('src/core/version.hpp','a'); f.write('#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION \"0.1.0\"\n#endif\n'); f.close()"
+          mkdir -p src/core
+          cat << 'EOF' > src/core/version.hpp
+          #ifndef PULSO_VERSION_HPP
+          #define PULSO_VERSION_HPP
+          #define PULSO_VERSION "0.1.0"
+          #endif
+          EOF
+
+      - name: Generar version.hpp si no existe (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path src/core
+          @"
+          #ifndef PULSO_VERSION_HPP
+          #define PULSO_VERSION_HPP
+          #define PULSO_VERSION "0.1.0"
+          #endif
+          "@ | Out-File -FilePath src/core/version.hpp -Encoding ascii
 
       - name: Instalar dependencias (Linux)
         if: runner.os == 'Linux'
