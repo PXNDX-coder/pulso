@@ -59,27 +59,22 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Generar version.hpp previo a CMake (Linux / macOS)
-        if: runner.os != 'Windows'
-        shell: bash
-        run: |
-          mkdir -p src/core
-          cat << 'EOF' > src/core/version.hpp
-          #ifndef PULSO_VERSION_HPP
-          #define PULSO_VERSION_HPP
-          #define PULSO_VERSION "0.1.0"
-          #endif
-          EOF
-
-      - name: Generar version.hpp previo a CMake (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          New-Item -ItemType Directory -Force -Path src/core
-          Set-Content -Path src/core/version.hpp -Value '#ifndef PULSO_VERSION_HPP' -Encoding ascii
-          Add-Content -Path src/core/version.hpp -Value '#define PULSO_VERSION_HPP' -Encoding ascii
-          Add-Content -Path src/core/version.hpp -Value '#define PULSO_VERSION "0.1.0"' -Encoding ascii
-          Add-Content -Path src/core/version.hpp -Value '#endif' -Encoding ascii
+      - name: Crear archivo version.hpp
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const dirPath = path.join(process.env.GITHUB_WORKSPACE, 'src', 'core');
+            const filePath = path.join(dirPath, 'version.hpp');
+            
+            if (!fs.existsSync(dirPath)) {
+              fs.mkdirSync(dirPath, { recursive: true });
+            }
+            
+            const headerContent = `#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION "0.1.0"\n#endif\n`;
+            fs.writeFileSync(filePath, headerContent, 'utf8');
+            console.log('version.hpp creado exitosamente en:', filePath);
 
       - name: Instalar dependencias (Linux)
         if: runner.os == 'Linux'
