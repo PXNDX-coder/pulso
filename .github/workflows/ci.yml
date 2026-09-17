@@ -57,28 +57,39 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+
+      - name: Generar version.hpp si no existe
+        run: |
+          python3 -c "import os; os.makedirs('src/core', exist_ok=True); f=open('src/core/version.hpp','a'); f.write('#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION \"0.1.0\"\n#endif\n'); f.close()"
+
       - name: Instalar dependencias (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++ libgtest-dev libsqlite3-dev
+
       - name: Configurar CMake con tests
         run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra"
+
       - name: Compilar
         run: cmake --build build
+
       - name: Install clang-tidy (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt update
           sudo apt install -y clang-tidy-14
           sudo ln -sf /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
+
       - name: Run clang-tidy (Linux)
         if: runner.os == 'Linux'
         run: |
           find src/ -name "*.cpp" -o -name "*.cxx" -o -name "*.cc" | \
           xargs clang-tidy --config-file=.clang-tidy --warnings-as-errors='' -- -std=c++17
+
       - name: Ejecutar tests con ctest
         run: cd build && ctest --output-on-failure
+
       - name: Ejecutar detección de memory leaks con Valgrind
         if: runner.os == 'Linux'
         continue-on-error: true
