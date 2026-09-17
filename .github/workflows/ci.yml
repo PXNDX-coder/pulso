@@ -68,6 +68,16 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cmake g++ libgtest-dev libsqlite3-dev
 
+      - name: Instalar dependencias (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install googletest sqlite3
+
+      - name: Instalar dependencias (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install googletest sqlite
+
       - name: Configurar CMake con tests
         run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra"
 
