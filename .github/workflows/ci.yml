@@ -50,7 +50,6 @@ jobs:
   build-and-test:
     needs: validar-pr
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -59,9 +58,14 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
 
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
       - name: Generar version.hpp previo a CMake
         run: |
-          python3 -c "import os; os.makedirs('src/core', exist_ok=True); open('src/core/version.hpp', 'w').write('#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION \"0.1.0\"\n#endif\n')"
+          python -c "import os; os.makedirs('src/core', exist_ok=True); open('src/core/version.hpp', 'w').write('#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION \"0.1.0\"\n#endif\n')"
 
       - name: Instalar dependencias (Linux)
         if: runner.os == 'Linux'
@@ -70,9 +74,11 @@ jobs:
           sudo apt-get install -y cmake g++ libgtest-dev libsqlite3-dev
 
       - name: Configurar CMake con tests
+        continue-on-error: ${{ runner.os != 'Linux' }}
         run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra"
 
       - name: Compilar
+        continue-on-error: ${{ runner.os != 'Linux' }}
         run: cmake --build build
 
       - name: Install clang-tidy (Linux)
@@ -89,6 +95,7 @@ jobs:
           xargs clang-tidy --config-file=.clang-tidy --warnings-as-errors='' -- -std=c++17
 
       - name: Ejecutar tests con ctest
+        continue-on-error: ${{ runner.os != 'Linux' }}
         run: cd build && ctest --output-on-failure
 
       - name: Ejecutar detección de memory leaks con Valgrind
