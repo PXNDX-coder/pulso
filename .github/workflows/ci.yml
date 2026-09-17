@@ -74,7 +74,6 @@ jobs:
             
             const headerContent = `#ifndef PULSO_VERSION_HPP\n#define PULSO_VERSION_HPP\n#define PULSO_VERSION "0.1.0"\n#endif\n`;
             fs.writeFileSync(filePath, headerContent, 'utf8');
-            console.log('version.hpp creado exitosamente en:', filePath);
 
       - name: Instalar dependencias (Linux)
         if: runner.os == 'Linux'
@@ -83,11 +82,11 @@ jobs:
           sudo apt-get install -y cmake g++ libgtest-dev libsqlite3-dev
 
       - name: Configurar CMake con tests
-        continue-on-error: ${{ runner.os != 'Linux' }}
+        continue-on-error: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' }}
         run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra"
 
       - name: Compilar
-        continue-on-error: ${{ runner.os != 'Linux' }}
+        continue-on-error: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' }}
         run: cmake --build build
 
       - name: Install clang-tidy (Linux)
@@ -104,7 +103,7 @@ jobs:
           xargs clang-tidy --config-file=.clang-tidy --warnings-as-errors='' -- -std=c++17
 
       - name: Ejecutar tests con ctest
-        continue-on-error: ${{ runner.os != 'Linux' }}
+        continue-on-error: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' }}
         run: cd build && ctest --output-on-failure
 
       - name: Ejecutar detección de memory leaks con Valgrind
