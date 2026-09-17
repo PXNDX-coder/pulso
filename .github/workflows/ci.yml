@@ -27,12 +27,12 @@ jobs:
       - name: Verificar actualización de CHANGELOG
         run: |
           LABELS="${{ join(github.event.pull_request.labels.*.name, ' ') }}"
-  
+
           if echo "$LABELS" | grep -qw "skip-changelog"; then
             echo "✅ Verificación omitida por etiqueta skip-changelog"
             exit 0
           fi
-  
+
           git fetch origin ${{ github.base_ref }}
 
           CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
@@ -49,14 +49,16 @@ jobs:
   build-and-test:
     needs: validar-pr
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.os == 'windows-latest' || matrix.os == 'macos-latest' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
+        os: [ubuntu-22.04, ubuntu-24.04, windows-latest, macos-latest]
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
-      - name: Instalar dependencias
+      - name: Instalar dependencias (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++ libgtest-dev libsqlite3-dev
@@ -64,12 +66,14 @@ jobs:
         run: cmake -S . -B build -DBUILD_TESTS=ON -DCMAKE_CXX_FLAGS="-Wall -Wextra"
       - name: Compilar
         run: cmake --build build
-      - name: Install clang-tidy
+      - name: Install clang-tidy (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo apt update
           sudo apt install -y clang-tidy-14
           sudo ln -sf /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
-      - name: Run clang-tidy
+      - name: Run clang-tidy (Linux)
+        if: runner.os == 'Linux'
         run: |
           find src/ -name "*.cpp" -o -name "*.cxx" -o -name "*.cc" | \
           xargs clang-tidy --config-file=.clang-tidy --warnings-as-errors='' -- -std=c++17
