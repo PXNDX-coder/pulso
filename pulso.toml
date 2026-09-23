@@ -22,3 +22,10 @@ ruta_db = "pulso.db"
 
 # Nivel de log: debug, info, warn, error
 nivel_log = "info"
+
+[alertas.webhook]
+# Habilita o deshabilita la notificación externa vía webhook
+enabled = true
+
+# URL de destino para las peticiones POST con el payload de la alerta
+url = "http://localhost:8080/webhook"
