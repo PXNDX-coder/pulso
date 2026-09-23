@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "core/types.hpp"
-#include "formatters/formatter_csv.hpp"
+#include "formatters/formatter_text.hpp"
 
 namespace {
 
@@ -19,14 +19,7 @@ pulso::core::Snapshot crearSnapshotEjemplo(std::int64_t timestamp) {
     m1.value = 42.0;
     m1.timestamp = timestamp;
 
-    pulso::core::Metrica m2;
-    m2.name = "memory.used";
-    m2.unit = "bytes";
-    m2.value = 2048.0;
-    m2.timestamp = timestamp;
-
     s.metricas.push_back(m1);
-    s.metricas.push_back(m2);
 
     return s;
 }
@@ -45,40 +38,34 @@ std::vector<std::string> obtenerLineas(const std::string& output) {
 
 }
 
-TEST(TestFormatterCSV, Test_FormatoYContentType) {
-    pulso::formatters::FormatterCSV formatter;
+TEST(TestFormatterText, Test_FormatoYContentType) {
+    pulso::formatters::FormatterText formatter;
 
-    EXPECT_EQ(formatter.formato(), "csv");
-    EXPECT_EQ(formatter.contentType(), "text/csv");
+    EXPECT_EQ(formatter.formato(), "text");
+    EXPECT_EQ(formatter.contentType(), "text/plain");
 }
 
-TEST(TestFormatterCSV, Test_SnapshotVacio) {
-    pulso::formatters::FormatterCSV formatter;
+TEST(TestFormatterText, Test_SnapshotVacio) {
+    pulso::formatters::FormatterText formatter;
 
     pulso::core::Snapshot snapshot;
     snapshot.timestamp = 1000;
 
     std::string output = formatter.formatear(snapshot);
-    auto lineas = obtenerLineas(output);
-
-    ASSERT_EQ(lineas.size(), 1U);
-    EXPECT_NE(output.find("timestamp"), std::string::npos);
+    EXPECT_FALSE(output.empty());
 }
 
-TEST(TestFormatterCSV, Test_SnapshotConMetricas) {
-    pulso::formatters::FormatterCSV formatter;
+TEST(TestFormatterText, Test_SnapshotConMetricas) {
+    pulso::formatters::FormatterText formatter;
 
     auto snapshot = crearSnapshotEjemplo(2000);
     std::string output = formatter.formatear(snapshot);
-    auto lineas = obtenerLineas(output);
 
-    ASSERT_EQ(lineas.size(), 3U);
-    EXPECT_NE(lineas[1].find("cpu.usage"), std::string::npos);
-    EXPECT_NE(lineas[2].find("memory.used"), std::string::npos);
+    EXPECT_NE(output.find("cpu.usage"), std::string::npos);
 }
 
-TEST(TestFormatterCSV, Test_HistorialConSnapshots) {
-    pulso::formatters::FormatterCSV formatter;
+TEST(TestFormatterText, Test_HistorialConSnapshots) {
+    pulso::formatters::FormatterText formatter;
 
     std::vector<pulso::core::Snapshot> historial;
     historial.push_back(crearSnapshotEjemplo(100));
@@ -87,5 +74,5 @@ TEST(TestFormatterCSV, Test_HistorialConSnapshots) {
     std::string output = formatter.formatearHistorial(historial);
     auto lineas = obtenerLineas(output);
 
-    ASSERT_EQ(lineas.size(), 5U);
+    EXPECT_GT(lineas.size(), 0U);
 }
