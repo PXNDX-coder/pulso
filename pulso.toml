@@ -2,6 +2,9 @@
 # Todas las opciones tienen valores por defecto; este archivo muestra los valores
 # explícitos para fines de documentación.
 
+# Nivel de log: debug, info, warn, error
+nivel_log = "info"
+
 [servidor]
 # Dirección IP en la que escucha el servidor HTTP.
 # 0.0.0.0 acepta conexiones desde cualquier interfaz.
@@ -19,9 +22,6 @@ intervalo_segundos = 10
 # Ruta del archivo de base de datos SQLite.
 # Puede ser relativa al directorio de ejecución o absoluta.
 ruta_db = "pulso.db"
-
-# Nivel de log: debug, info, warn, error
-nivel_log = "info"
 
 [alertas.webhook]
 # Habilita o deshabilita la notificación externa vía webhook
